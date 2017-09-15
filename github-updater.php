@@ -1,7 +1,7 @@
 <?php
 /*
  Plugin Name: Github and Gitlab Wordpress plugin updater
- Plugin URI: http://brambronswijk.com
+ Plugin URI: https://github.com/bbronswijk/github-updater
  Description: This plugin allows wordpress to use the plugins which were downloaded directly from gitlab or github.
  Author: B. Bronswijk, LYCEO
  Version: 1.0
