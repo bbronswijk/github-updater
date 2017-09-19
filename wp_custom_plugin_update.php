@@ -61,9 +61,10 @@ class WP_CustomPluginUpdate extends GithubUpdatePlugin
 	{
 		$last_version = $this->getPluginVersionGithub();
 
-		$plugin = get_plugin_data( ABSPATH.$this->plugin_dir.'/'.$this->plugin_file);
-
+		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->plugin_dir.'/'.$this->plugin_file);
+		
 		if ($plugin['Version'] !== $last_version ){
+
 			$obj = new stdClass();
 			$obj->slug = $this->plugin_file;
 			$obj->new_version = $last_version; /// github value which should be higher
