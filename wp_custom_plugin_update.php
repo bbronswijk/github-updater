@@ -3,11 +3,7 @@
 
 class WP_CustomPluginUpdate extends GithubUpdatePlugin
 {
-
-	private $current_version;
-	private $update_path;
 	private $plugin_slug;
-	private $access_token;
 	public $settings_name;
 
 	function __construct ($name, $dir, $file, $url, $raw, $package)
@@ -18,12 +14,12 @@ class WP_CustomPluginUpdate extends GithubUpdatePlugin
 		$this->plugin_url = $url;
 		$this->raw_plugin_file = $raw;
 		$this->plugin_package = $package;
+		$this->plugin_slug = $this->plugin_dir.'/'.$this->plugin_file;
+		$slug = $this->plugin_dir; // used to name the options and settings
 
-		$this->plugin_slug = $this->plugin_dir; // used to name the options and settings
-
-		$this->settings_id = 'token_'.$this->plugin_slug;
-		$this->settings_name = $this->plugin_slug.'token_setting';
-		$this->option_name = 'token_'.$this->plugin_slug;
+		$this->settings_id = 'token_'.$slug;
+		$this->settings_name = $slug.'token_setting';
+		$this->option_name = 'token_'.$slug;
 		$this->token = get_option($this->option_name);
 
 		add_filter ('pre_set_site_transient_update_plugins', array($this,'checkForUpdate') );
@@ -60,24 +56,24 @@ class WP_CustomPluginUpdate extends GithubUpdatePlugin
 	function checkForUpdate()
 	{
 		$last_version = $this->getPluginVersionGithub();
+		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->plugin_slug);
 
-		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->plugin_dir.'/'.$this->plugin_file);
-		
-		if ($plugin['Version'] !== $last_version ){
-
+		if ($plugin['Version'] !== $last_version ) {
 			$obj = new stdClass();
-			$obj->slug = $this->plugin_file;
-			$obj->new_version = $last_version; /// github value which should be higher
-			$obj->package = $this->plugin_package; // zip file??
+			$obj->slug = $this->plugin_slug;
+			$obj->new_version = $last_version;
+			$obj->plugin = $this->plugin_slug;
+			$obj->url = $this->plugin_url;
 
 			if ( !empty($this->option) ) {
-				$obj->url = $this->plugin_url.'?private_token=' . $this->token; // ?private_token=gV1y2bG9nfS_6zz9drQy
+				$obj->package = $this->plugin_package.'?private_token=' . $this->token;
 			} else {
-				$obj->url = $this->plugin_url;
+				$obj->package = $this->plugin_package; // zip file??
 			}
 
-			$transient->response[plugin_basename( __FILE__ )] = $obj;
+			$transient->response[$this->plugin_dir.'/'.$this->plugin_file] = $obj;
 		}
+		return $transient;
 	}
 
 

@@ -7,10 +7,7 @@
  Version: 1.0
  */
 
-if (!class_exists('GithubUpdatePlugin')) {
-	$githubUpdatePlugin = new GithubUpdatePlugin();
-}
-
+$githubUpdatePlugin = new GithubUpdatePlugin();
 if (!class_exists('WP_Custom_Plugin_Update')) {
 	require_once 'wp_custom_plugin_update.php';
 }
