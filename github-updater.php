@@ -4,7 +4,7 @@
  Plugin URI: https://github.com/bbronswijk/github-updater
  Description: This plugin allows wordpress to use the plugins which were downloaded directly from gitlab or github.
  Author: B. Bronswijk, LYCEO
- Version: 1.0
+ Version: 2.0
  */
 
 $githubUpdatePlugin = new GithubUpdatePlugin();
@@ -20,13 +20,13 @@ class GithubUpdatePlugin
 
 	function __construct()
 	{
-		add_action( 'upgrader_process_complete', array( $this, 'rename_plugin_dir', 10, 2 ) );
+		add_action( 'upgrader_process_complete', array( $this, 'rename_plugin_dir' ), 10, 2  );
 		add_action( 'admin_menu', array( $this, 'create_admin_page' ) );
 		add_action( 'admin_init', array( $this, 'add_setting_section' ) );
 	}
 
 
-	function rename_plugin_dir ( $data )
+	function rename_plugin_dir ( $upgrader_object, $data )
 	{
 		// get the data of the updated plugins
 		$updated_plugins = $data['plugins'];

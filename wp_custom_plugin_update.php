@@ -37,7 +37,7 @@ class WP_CustomPluginUpdate extends GithubUpdatePlugin
 
 		add_settings_field(
 			$this->settings_name, // setting name
-			'Access Token '.$this->plugin_name, // setting title
+			$this->plugin_name, // setting title
 			array($this, 'plugin_options_page_html'), // html callback
 			$this->setting_page, // admin page
 			$this->setting_section // section
@@ -47,7 +47,7 @@ class WP_CustomPluginUpdate extends GithubUpdatePlugin
 	function plugin_options_page_html()
 	{
 		printf(
-			'<input type="text" name="%s" id="%s" value="%s" />',
+			'<input type="text" name="%s" id="%s" value="%s" placeholder="Access Token" size="50"/>',
 			$this->option_name, $this->settings_name, $this->token
 		);
 	}
@@ -59,13 +59,20 @@ class WP_CustomPluginUpdate extends GithubUpdatePlugin
 		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->plugin_slug);
 
 		if ($plugin['Version'] !== $last_version ) {
+
 			$obj = new stdClass();
 			$obj->slug = $this->plugin_slug;
 			$obj->new_version = $last_version;
 			$obj->plugin = $this->plugin_slug;
-			$obj->url = $this->plugin_url;
 
-			if ( !empty($this->option) ) {
+
+			if ( !empty($this->token) ) {
+				$obj->url = $this->plugin_url.'?private_token=' . $this->token;
+			} else {
+				$obj->url = $this->plugin_url; // zip file??
+			}
+
+			if ( !empty($this->token) ) {
 				$obj->package = $this->plugin_package.'?private_token=' . $this->token;
 			} else {
 				$obj->package = $this->plugin_package; // zip file??
@@ -79,7 +86,11 @@ class WP_CustomPluginUpdate extends GithubUpdatePlugin
 
 	function getPluginVersionGithub()
 	{
-		$handle = fopen($this->raw_plugin_file, "r");
+		if ( !empty($this->token) ) {
+			$handle = fopen($this->raw_plugin_file.'?private_token=' . $this->token, "r");
+		} else {
+			$handle = fopen($this->raw_plugin_file, "r");
+		}
 
 		if ($handle) {
 			while (($line = fgets($handle)) !== false) {
