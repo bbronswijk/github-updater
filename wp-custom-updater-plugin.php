@@ -4,7 +4,7 @@
  Plugin URI: https://github.com/bbronswijk/github-updater
  Description: This plugin allows WordPress to update plugins and themes directly from gitlab or github.
  Author: B. Bronswijk, LYCEO
- Version: 2.0
+ Version: 2.0.0
  */
 
 $githubUpdatePlugin = new GithubUpdatePlugin();
@@ -12,7 +12,14 @@ $githubUpdatePlugin = new GithubUpdatePlugin();
 // require the update class
 require_once 'wp_custom_update.php';
 
-
+/**
+ * The main plugin class
+ *
+ * This class creates the admin settings pages
+ * and renames the directories after a plugin or theme update
+ *
+ * @since 1.0.0
+ */
 class GithubUpdatePlugin
 {
 	// get accessed by the WP_CustomUpdate class
@@ -29,7 +36,12 @@ class GithubUpdatePlugin
 		add_filter ('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'add_action_links']);
 	}
 
-
+	/**
+	 * Renames the plugin directory
+	 *
+	 * @param $upgrader_object
+	 * @param $data
+	 */
 	function rename_plugin_dir ( $upgrader_object, $data ) {
 		// get the data of the updated plugins
 		$updated_plugins = $data['plugins'];
@@ -56,6 +68,12 @@ class GithubUpdatePlugin
 		}
 	}
 
+	/**
+	 * Renames the theme directory
+	 *
+	 * @param $upgrader_object
+	 * @param $data
+	 */
 	function rename_theme_dir($upgrader_object, $data )
 	{
 		// get the data of the updated plugins
@@ -85,6 +103,9 @@ class GithubUpdatePlugin
 		}
 	}
 
+	/**
+	 * Creates an admin setting page
+	 */
 	public function create_admin_page()
 	{
 		add_options_page(
@@ -96,18 +117,22 @@ class GithubUpdatePlugin
 		);
 	}
 
+	/**
+	 * Renders the admin setting page
+	 */
 	function admin_token_page()
 	{
-		if (false === current_user_can('publish_posts')) wp_die( __('You do not have sufficient permissions to access this page.') );
+		// check if the users capabilities
+		if (false === current_user_can('publish_posts')){
+			wp_die(__('You do not have sufficient permissions to access this page.') );
+		}
 
 		require_once 'admin_page.php';
 	}
 
-	public function section_description_html()
-	{
-		echo '<p>Voer hieronder uw accestokens in voor de themes & plugin die gebruik maken van de Custom Update Plugin</p>';
-	}
-
+	/**
+	 * Creates an section for settings
+	 */
 	public function add_setting_section()
 	{
 		add_settings_section(
@@ -118,6 +143,21 @@ class GithubUpdatePlugin
 		);
 	}
 
+	/**
+	 * Outputs the html for the settings section
+	 */
+	public function section_description_html()
+	{
+		echo '<p>Voer hieronder uw accestokens in voor de themes & plugin die gebruik maken van de Custom Update Plugin</p>';
+	}
+
+	/**
+	 * Adds a setting link to the plugin item in the plugin list
+	 *
+	 * @param $links
+	 *
+	 * @return array
+	 */
 	function add_action_links ( $links ) {
 		$mylinks = array('<a href="' . admin_url( 'options-general.php?page='.$this->setting_page ) . '">Settings</a>');
 		return array_merge( $links, $mylinks );

@@ -58,10 +58,12 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function checkForPluginUpdates($transient)
 	{
-		$last_version = $this->getLastVersion();
-		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->file);
+		if( false === $this->is_plugin ) return false;
 
-		if ($plugin['Version'] !== $last_version ) {
+		$last_version = $this->getLastVersion();
+		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->slug);
+
+		if ( $plugin['Version'] > $last_version) {
 
 			$obj = new stdClass();
 			$obj->slug = $this->slug;
@@ -87,7 +89,7 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function checkForThemeUpdates($updates)
 	{
-		if( $this->is_plugin !== false ) return false;
+		if( true === $this->is_plugin ) return false;
 
 		$last_version = $this->getLastVersion();
 
