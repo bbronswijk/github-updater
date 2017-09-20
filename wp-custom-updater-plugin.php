@@ -22,10 +22,11 @@ class GithubUpdatePlugin
 
 	function __construct()
 	{
-		add_action( 'upgrader_process_complete', array( $this, 'rename_plugin_dir' ), 10, 2  );
-		add_action( 'upgrader_process_complete', array( $this, 'rename_theme_dir' ), 10, 2  );
-		add_action( 'admin_menu', array( $this, 'create_admin_page' ) );
-		add_action( 'admin_init', array( $this, 'add_setting_section' ) );
+		add_action ('upgrader_process_complete', [$this, 'rename_plugin_dir'], 10, 2 );
+		add_action ('upgrader_process_complete', [$this, 'rename_theme_dir'], 10, 2 );
+		add_action ('admin_menu', [$this, 'create_admin_page']);
+		add_action ('admin_init', [$this, 'add_setting_section']);
+		add_filter ('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'add_action_links']);
 	}
 
 
@@ -33,16 +34,16 @@ class GithubUpdatePlugin
 		// get the data of the updated plugins
 		$updated_plugins = $data['plugins'];
 
-		if ( !empty( $updated_plugins ) ) {
-			foreach ( $updated_plugins as $path ) {
+		if ( false === empty($updated_plugins)) {
+			foreach ($updated_plugins as $path) {
 				$path_parts       = explode( '/', $path );
 				$plugin_directory = $path_parts[0];
 
 				// loop through plugin directories and look for the current updated plugin folder
-				$dirs = glob( ABSPATH . 'wp-content/plugins/*' );
+				$dirs = glob(ABSPATH . 'wp-content/plugins/*');
 				foreach ( $dirs as $dir ) {
 					// check if this is the folder we need
-					if ( is_dir( $dir ) && strpos( $dir, '-master' ) !== false && strpos( $dir, $plugin_directory ) ) {
+					if (is_dir( $dir ) && false !== strpos( $dir, '-master' )  && strpos( $dir, $plugin_directory )) {
 
 						//explode the directory path
 						$parts = explode( '-master', $dir );
@@ -62,16 +63,16 @@ class GithubUpdatePlugin
 
 		if( !empty($updated_themes) ) {
 
-			foreach ( $updated_themes as $path ) {
+			foreach ($updated_themes as $path) {
 
-				$path_parts      = explode( '/', $path );
+				$path_parts      = explode('/', $path);
 				$theme_directory = $path_parts[0];
 
 				// loop through plugin directories and look for the current updated plugin folder
-				$dirs = glob( ABSPATH . 'wp-content/themes/*' );
+				$dirs = glob(ABSPATH . 'wp-content/themes/*');
 				foreach ( $dirs as $dir ) {
 					// check if this is the folder we need
-					if ( is_dir( $dir ) && strpos( $dir, '-master' ) !== false && strpos( $dir, $theme_directory ) ) {
+					if (is_dir( $dir ) && false !== strpos( $dir, '-master' ) && strpos( $dir, $theme_directory )) {
 
 						//explode the directory path
 						$parts = explode( '-master', $dir );
@@ -84,11 +85,10 @@ class GithubUpdatePlugin
 		}
 	}
 
-
 	public function create_admin_page()
 	{
 		add_options_page(
-			'Custom Updater', // title
+			__('Custom Updater'), // title
 			__('Update settings'), // menu item
 			'publish_posts',
 			$this->setting_page,
@@ -98,7 +98,7 @@ class GithubUpdatePlugin
 
 	function admin_token_page()
 	{
-		if ( !current_user_can( 'publish_posts' ) ) wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+		if (false === current_user_can('publish_posts')) wp_die( __('You do not have sufficient permissions to access this page.') );
 
 		require_once 'admin_page.php';
 	}
@@ -113,9 +113,14 @@ class GithubUpdatePlugin
 		add_settings_section(
 			$this->setting_section, // section id
 			false, // section title
-			array($this, 'section_description_html'), // hmtl callback
+			array($this, 'section_description_html'), // html output callback
 			$this->setting_page // setting page id
 		);
+	}
+
+	function add_action_links ( $links ) {
+		$mylinks = array('<a href="' . admin_url( 'options-general.php?page='.$this->setting_page ) . '">Settings</a>');
+		return array_merge( $links, $mylinks );
 	}
 
 }

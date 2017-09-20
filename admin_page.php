@@ -1,6 +1,6 @@
 
 <div class="wrap">
-	<h1>Accesstokens GitLab</h1>
+	<h1>Accesstokens repositories</h1>
 	<form method="post" action="options.php">
 		<?php settings_fields($this->option_group); ?>
 		<?php do_settings_sections( $this->setting_page ); ?>

@@ -3,7 +3,6 @@
 
 class WP_CustomUpdate extends GithubUpdatePlugin
 {
-	private $plugin_slug;
 	public $settings_name;
 
 	function __construct ($name, $dir, $file, $url, $raw, $package, $plugin = true )
@@ -24,10 +23,11 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 		$this->token = get_option($this->option_name);
 
 		// check for updates
-		add_filter ('site_transient_update_themes', [$this,'checkForThemeUpdates'] );
-		add_filter ('pre_set_site_transient_update_plugins', [$this,'checkForPluginUpdates'] );
+		add_filter ('site_transient_update_themes', [$this,'checkForThemeUpdates']);
+		add_filter ('pre_set_site_transient_update_plugins', [$this,'checkForPluginUpdates']);
 		// register the token setting for the hooked theme or plugin
-		add_action( 'admin_init', [$this, 'create_token_setting'] );
+		add_action( 'admin_init', [$this, 'create_token_setting']);
+
 
 	}
 
