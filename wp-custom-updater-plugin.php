@@ -3,8 +3,8 @@
  Plugin Name: Custom Wordpress Updater
  Plugin URI: https://github.com/bbronswijk/github-updater
  Description: This plugin allows WordPress to update plugins and themes directly from gitlab or github.
- Author: B. Bronswijk, LYCEO
- Version: 2.0.0
+ Author: B. Bronswijk
+ Version: 2.0.2
  */
 
 $githubUpdatePlugin = new GithubUpdatePlugin();
@@ -29,12 +29,42 @@ class GithubUpdatePlugin
 
 	function __construct()
 	{
-		add_action ('upgrader_process_complete', [$this, 'rename_plugin_dir'], 10, 2 );
-		add_action ('upgrader_process_complete', [$this, 'rename_theme_dir'], 10, 2 );
-		add_action ('admin_menu', [$this, 'create_admin_page']);
-		add_action ('admin_init', [$this, 'add_setting_section']);
-		add_filter ('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'add_action_links']);
+		add_action ('upgrader_process_complete', array($this, 'rename_plugin_dir'), 10, 2 );
+		add_action ('upgrader_process_complete', array($this, 'rename_theme_dir'), 10, 2 );
+		add_action ('admin_menu', array($this, 'create_admin_page'));
+		add_action ('admin_init', array($this, 'add_setting_section'));
+		add_filter ('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_action_links'));
+
+		add_action ('admin_enqueue_scripts', array($this,'loadScripts'));
+		add_action ('wp_ajax_set_repo_versions', array($this,'set_repo_versions'));
 	}
+
+	function loadScripts() {
+		wp_enqueue_script( 'update-api-request', '/wp-content/plugins/wp-custom-update/api-request.js', array('jquery') );
+		wp_localize_script( 'update-api-request', ajax, array( 'url' => admin_url( 'admin-ajax.php' ) ) );
+	}
+
+	function set_repo_versions() {
+		// first check if data is being sent and that it is the data we want
+	  	if ( isset( $_POST["version"] ) ) {
+
+	  		$date = date("D j F Y, H:i:s");
+
+			$option = array(
+			    'version' => $_POST["version"],
+			    'name' => $_POST["name"],
+			    'token' => $_POST["token"],
+			    'date' => $date
+			);
+
+			update_option($_POST["name"], $option);
+
+			echo $date;
+			die();
+		}
+		die('no data provided');
+	}
+
 
 	/**
 	 * Renames the plugin directory
@@ -115,6 +145,7 @@ class GithubUpdatePlugin
 			$this->setting_page,
 			array($this, 'admin_token_page')
 		);
+
 	}
 
 	/**

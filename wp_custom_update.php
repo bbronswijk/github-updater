@@ -15,28 +15,25 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 		$this->raw_file = $raw;
 		$this->package = $package;
 		$this->slug = $this->dir.'/'.$this->main_file;
+		$this->api = "https://gitlab.com/api/v4/projects/bbronswijk%2Ffresh-insights/repository/tags?private_token=uWRE_GPzYvk7wiU6qk54";
 		$slug = $this->dir; // used to name the options and settings
 
 		$this->settings_id = 'token_'.$slug;
 		$this->settings_name = $slug.'token_setting';
 		$this->option_name = 'token_'.$slug;
-		$this->token = get_option($this->option_name);
+		$option = get_option($this->option_name);
+		
+		$this->token = $option['token'];
 
 		// check for updates
 		// register the token setting for the hooked theme or plugin
-		add_action( 'admin_init', [$this, 'create_token_setting']);
-		add_action( 'admin_init', [$this, 'checkUpdates']);
+		add_action( 'admin_init', array($this, 'create_token_setting'));
+		add_action( 'admin_init', array($this, 'checkUpdates'));
 	}
 
 	public function checkUpdates(){
-		$screen = get_current_screen();
-
-		wp_die($screen->id);
-		if ( $screen->id != 'update-core.php' ){
-			return false;
-		}
-		add_filter ('site_transient_update_themes', [$this,'checkForThemeUpdates']);
-		add_filter ('pre_set_site_transient_update_plugins', [$this,'checkForPluginUpdates']);
+		add_filter ('site_transient_update_themes', array($this,'checkForThemeUpdates'));
+		add_filter ('pre_set_site_transient_update_plugins', array($this,'checkForPluginUpdates'));
 	}
 
 	public function create_token_setting()
@@ -58,9 +55,11 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function token_option_html()
 	{
+
+
 		printf(
-			'<input type="text" name="%s" id="%s" value="%s" placeholder="Access Token" size="50"/>',
-			$this->option_name, $this->settings_name, $this->token
+			'<input type="text" name="%s" id="%s" value="%s" placeholder="Access Token" size="50" api="%s"/>',
+			$this->option_name, $this->settings_name, $this->token, $this->api
 		);
 	}
 
@@ -125,9 +124,13 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 	function getLastVersion()
 	{
 		if ( !empty($this->token) ) {
-			$handle = fopen($this->raw_file.'?private_token=' . $this->token, "r");
+			if (file_exists($this->raw_file.'?private_token=' . $this->token)) {
+				$handle = fopen($this->raw_file.'?private_token=' . $this->token, "r");	
+			}			
 		} else {
-			$handle = fopen($this->raw_file, "r");
+			if (file_exists($this->raw_file)) {
+				$handle = fopen($this->raw_file, "r");
+			}
 		}
 
 		if ($handle) {
