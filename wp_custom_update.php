@@ -23,12 +23,20 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 		$this->token = get_option($this->option_name);
 
 		// check for updates
-		add_filter ('site_transient_update_themes', [$this,'checkForThemeUpdates']);
-		add_filter ('pre_set_site_transient_update_plugins', [$this,'checkForPluginUpdates']);
 		// register the token setting for the hooked theme or plugin
 		add_action( 'admin_init', [$this, 'create_token_setting']);
+		add_action( 'admin_init', [$this, 'checkUpdates']);
+	}
 
+	public function checkUpdates(){
+		$screen = get_current_screen();
 
+		wp_die($screen->id);
+		if ( $screen->id != 'update-core.php' ){
+			return false;
+		}
+		add_filter ('site_transient_update_themes', [$this,'checkForThemeUpdates']);
+		add_filter ('pre_set_site_transient_update_plugins', [$this,'checkForPluginUpdates']);
 	}
 
 	public function create_token_setting()
@@ -61,9 +69,12 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 		if( false === $this->is_plugin ) return false;
 
 		$last_version = $this->getLastVersion();
+
 		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->slug);
 
-		if ( $plugin['Version'] > $last_version) {
+		//wp_die(version_compare ( $last_version, $plugin['Version'],'>' ));
+
+		if (version_compare ( $last_version, $plugin['Version'],'>' )) {
 
 			$obj = new stdClass();
 			$obj->slug = $this->slug;
@@ -89,14 +100,14 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function checkForThemeUpdates($updates)
 	{
-		if( true === $this->is_plugin ) return false;
+		if ( true === $this->is_plugin ) return false;
 
 		$last_version = $this->getLastVersion();
 
 		$theme = wp_get_theme($this->dir, WP_CONTENT_DIR . '/themes');
 		$cur_version = $theme->get( 'Version' );
 
-		if( $last_version > $cur_version ){
+		if (version_compare ( $last_version, $cur_version ,'>' )){
 			$update = array(
 				'new_version' => $last_version ,
 				'url' => $this->url,
@@ -125,7 +136,14 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 					$words = $parts = explode (':', $line);
 					$version = trim($words[1]);
 					fclose($handle);
-					return $version;
+
+					$check = preg_match("/^(?:(\d+)\.)?(?:(\d+)\.)?(\*|\d+)$/", $version);
+
+					if( $check ){
+						return $version;
+					} else{
+						return 'Error: No AccessToken provided';
+					}
 				}
 			}
 			fclose($handle);
@@ -134,5 +152,9 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 			return 'Error: file not found';
 		}
 	}
+
+
+
 }
+
 
