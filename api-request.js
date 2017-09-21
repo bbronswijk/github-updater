@@ -17,7 +17,7 @@ jQuery(document).ready(function($){
 			// get url from plugin
 			var url = $input.eq(i).val();
             var option_name = $input.eq(i).attr('name');
-            var $version_container = $('span#'+option_name+'-version')
+            var $version_container = $('span#'+option_name)
 
 			// check for each plugin the online version
 			var settings = {
