@@ -128,6 +128,9 @@ class GithubUpdatePlugin
 						//explode the directory path
 						$parts = explode( '-master', $dir );
 
+						update_option('stylesheet',$updated_themes[0] );
+						update_option('template',$updated_themes[0] );
+
 						// rename the directory and use only the part before the -master part
 						rename( $dir, $parts[0] );
 					}

@@ -32,7 +32,6 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 		// register the token setting for the hooked theme or plugin
 		add_action( 'admin_init', array($this, 'checkUpdates'));
 		add_action( 'admin_init', array($this, 'create_token_setting'));
-
 	}
 
 	public function checkUpdates(){
@@ -113,12 +112,15 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 		if (version_compare ( $last_version, $cur_version ,'>' )){
 			$update = array(
+				'name' => 'Inspiring Insights',
+				'slug' => 'fresh-insights',
 				'new_version' => $last_version ,
 				'url' => $this->url,
 				'package' => $this->package
 			);
 
 			$updates->response[$this->dir] = $update;
+
 		}
 
 		return $updates;
