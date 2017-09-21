@@ -27,11 +27,11 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 		if (false === empty($this->token)) {
 			$this->api .= '?private_token='.$this->token;
+			$this->package .= '?private_token='.$this->token;
 		}
 		// register the token setting for the hooked theme or plugin
 		add_action( 'admin_init', array($this, 'checkUpdates'));
 		add_action( 'admin_init', array($this, 'create_token_setting'));
-
 
 	}
 
@@ -92,7 +92,9 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 				$obj->package = $this->package.'?private_token=' . $this->token;
 			} else {
 				$obj->package = $this->package; // zip file??
+				
 			}
+
 			$transient->response[$this->slug] = $obj;
 		}
 		return $transient;
@@ -100,9 +102,11 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function checkForThemeUpdates($updates)
 	{
+
 		if ( true === $this->is_plugin ) return $updates;
 
 		$last_version = $this->getLastVersion();
+
 
 		$theme = wp_get_theme($this->dir, WP_CONTENT_DIR . '/themes');
 		$cur_version = $theme->get( 'Version' );

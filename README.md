@@ -13,27 +13,15 @@ function activate_custom_updates()
 {
     if( !class_exists (WP_CustomUpdate) ) return false;
 
-    $name       = 'Plugin name';
-    $dir        = 'plugin-directory';
-    $file       = 'main-plugin-file.php';
-    $url        = 'https://github.com/user/yourplugin-repo/';
-    $raw        = 'https://raw.githubusercontent.com/user/yourplugin-repo/master/main-plugin-file.php';
-    $package    = 'https://github.com/user/yourplugin-repo/archive/master.zip';
+    $slug       = 'theme-directory/style.css';
+    $repo        = 'user/repo';
 
-    if ( $name && $dir  && $file && $url && $raw && $package ) {
-        new WP_CustomUpdate($name, $dir, $file, $url, $raw, $package, true );
+    if ($slug && $repo) {
+        new WP_CustomUpdate($slug, $repo, false );
     }
 } add_action ('init', 'activate_custom_updates');
 ```
-See an explanation of the variables below:
-```
-$name       : easy to read name of your plugin 
-$dir        : name of your plugin directory inside the wordpress plugins folder 
-$file       : main plugin file 
-$url        : Link to your repo
-$raw        : Main plugin file used to retrieve the latest plugin version
-$package    : Download link to download the repo in a .zip file
-```
+
 If you hosting your plugin or theme in a private repository, provide an access token in the update setting page. 
 
 ## How does it work?
