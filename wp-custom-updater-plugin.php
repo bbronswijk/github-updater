@@ -25,35 +25,36 @@ class GithubUpdatePlugin
 	// get accessed by the WP_CustomUpdate class
 	public $setting_page  = 'custom_updater_settings';
 	public $setting_section = 'update_access_token_section';
+	public $token_setting = 'custom_update_access_token';
 	public $option_group  = 'updater_token_group';
 
 	function __construct()
 	{
+
 		add_action ('upgrader_process_complete', array($this, 'rename_plugin_dir'), 10, 2 );
 		add_action ('upgrader_process_complete', array($this, 'rename_theme_dir'), 10, 2 );
-		add_action ('admin_menu', array($this, 'create_admin_page'));
-		add_action ('admin_init', array($this, 'add_setting_section'));
-		add_filter ('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_action_links'));
 
+		add_action ('admin_menu', array($this, 'create_admin_page'));
+		add_action( 'admin_init', array($this, 'create_token_setting'));
+
+		add_filter ('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_action_links'));
+		// only on admin page
 		add_action ('admin_enqueue_scripts', array($this,'loadScripts'));
 		add_action ('wp_ajax_set_repo_versions', array($this,'set_repo_versions'));
+		add_action ('wp_ajax_set_save_token', array($this,'save_token'));
 	}
 
 	function loadScripts() {
-		wp_enqueue_script( 'update-api-request', '/wp-content/plugins/wp-custom-update/api-request.js', array('jquery') );
+		wp_enqueue_script( 'update-api-request', '/wp-content/plugins/wp-custom-updater/api-request.js', array('jquery'), '1.0.0', true );
 		wp_localize_script( 'update-api-request', ajax, array( 'url' => admin_url( 'admin-ajax.php' ) ) );
 	}
 
 	function set_repo_versions() {
 		// first check if data is being sent and that it is the data we want
 	  	if ( isset( $_POST["version"] ) ) {
-
-	  		$date = date("D j F Y, H:i:s");
-
+	  		$date = date("j F Y, H:i:s");
 			$option = array(
 			    'version' => $_POST["version"],
-			    'name' => $_POST["name"],
-			    'token' => $_POST["token"],
 			    'date' => $date
 			);
 
@@ -138,14 +139,14 @@ class GithubUpdatePlugin
 	 */
 	public function create_admin_page()
 	{
-		add_options_page(
+		add_submenu_page(
+			'plugins.php',
 			__('Custom Updater'), // title
 			__('Update settings'), // menu item
 			'publish_posts',
 			$this->setting_page,
 			array($this, 'admin_token_page')
 		);
-
 	}
 
 	/**
@@ -158,37 +159,46 @@ class GithubUpdatePlugin
 			wp_die(__('You do not have sufficient permissions to access this page.') );
 		}
 
+		if($_POST[$this->token_setting]){
+			update_option($this->token_setting,$_POST[$this->token_setting]);
+		}
+
 		require_once 'admin_page.php';
 	}
 
-	/**
-	 * Creates an section for settings
-	 */
-	public function add_setting_section()
+	public function create_token_setting()
 	{
 		add_settings_section(
 			$this->setting_section, // section id
 			false, // section title
-			array($this, 'section_description_html'), // html output callback
+			false, // html output callback
 			$this->setting_page // setting page id
+		);
+
+		// custom setting
+		register_setting(
+			$this->option_group, // setting group --> set in github-updater.php
+			$this->option_name // option_name
+		);
+
+		add_settings_field(
+			$this->settings_name, // setting name
+			'GitLab Access token', // setting title
+			array($this, 'token_option_html'), // html callback
+			$this->setting_page, // admin page
+			$this->setting_section // section
 		);
 	}
 
-	/**
-	 * Outputs the html for the settings section
-	 */
-	public function section_description_html()
+	function token_option_html()
 	{
-		echo '<p>Voer hieronder uw accestokens in voor de themes & plugin die gebruik maken van de Custom Update Plugin</p>';
+		printf(
+			'<input type="text" name="%s" value="%s" placeholder="Access Token" size="50" />',
+			$this->token_setting, get_option($this->token_setting)
+		);
 	}
 
-	/**
-	 * Adds a setting link to the plugin item in the plugin list
-	 *
-	 * @param $links
-	 *
-	 * @return array
-	 */
+	// Adds a setting link to the plugin item in the plugin list
 	function add_action_links ( $links ) {
 		$mylinks = array('<a href="' . admin_url( 'options-general.php?page='.$this->setting_page ) . '">Settings</a>');
 		return array_merge( $links, $mylinks );

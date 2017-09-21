@@ -1,24 +1,21 @@
 jQuery(document).ready(function($){
 
 	if( $('.wrap#custom_updater_settings-page').length === 0 ) return false;
-		
-	$('#getRepoVersions').on('click',getRepoVersions);
 
-	$loader = $('.spinner');
+	// define elements
+    var $input = $('.wrap#custom_updater_settings-page').find('input.plugin-version')
+	var $loader = $('.spinner');
 
-	$input = $('.wrap#custom_updater_settings-page').find('input[type="text"]');
+	// trigger events
+    $('#getRepoVersions').on('click',getRepoVersions);
 
-	getRepoVersions();
-
-	function getRepoVersions(){
+	function getRepoVersions()
+	{
 		$loader.css('visibility','visible');
 
 		$.each($input,function(i){
-
 			// get url from plugin
-			var url = $input.eq(i).attr('api');
-			var option_name = $input.eq(i).attr('name');
-			var token = $input.eq(i).val();
+			var url = $input.eq(i).val();
 
 			// check for each plugin the online version
 			var settings = {
@@ -26,37 +23,44 @@ jQuery(document).ready(function($){
 			  "crossDomain": true,
 			  "url": url,
 			  "method": "GET",
-			  "headers": {
-			    "x-api-key": "a0B1c2D34D5c6b7a8",
-			    "accept": "application/hal+json"
-			  }
 			}
 
+			// get the version from the github api
 			$.ajax(settings).done(function (response) {
+				var version = response[0].name;
+                var $version_info = 'v. '+version;
+                var option_name = $input.eq(i).attr('name');
 
-				var data = {
-					action 	: 'set_repo_versions',
-				    version : response[0].name,
-				    token 	: token,
-				    name 	: option_name
-				};
+                var $version_container = $('span#'+option_name+'-version')
+                $version_container.text($version_info);
 
-				// the_ajax_script.ajaxurl is a variable that will contain the url to the ajax processing file
-				$.post(ajax.url, data, function(response) {
-					if( i === $input.length - 1 ){
-						$loader.css('visibility','hidden');
-						$('span#last-updated').text(response);
-					} 
-				});
+                saveSetting(i, option_name, version);
+
+			}).error(function(){
+                $version_container.text('api request denied');
+                $loader.css('visibility','hidden');
 			});
 
 		});
 	}
 
-	
+	// saves the values as an array in a WordPress option
+    function saveSetting(index,option_name,version = null)
+    {
+        var data = {
+            action 	: 'set_repo_versions',
+            version : version,
+            name 	: option_name
+        };
 
-	
+        // store the data in the wordpress option
+        $.post(ajax.url, data, function(response) {
+            if( index === $input.length - 1 ){
+                $loader.css('visibility','hidden');
+                $('span#last-updated').text('Laatste controle op '+response);
+            }
+        });
+    }
 
-	
 
 });

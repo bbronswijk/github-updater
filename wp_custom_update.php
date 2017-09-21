@@ -5,35 +5,38 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 {
 	public $settings_name;
 
-	function __construct ($name, $dir, $file, $url, $raw, $package, $plugin = true )
+	function __construct ($slug, $repo, $plugin = true )
 	{
+		$this->slug = $slug; // plugin-directory/plugin.php
+		$slug_parts = explode("/",$this->slug);
+		$slug = $slug_parts[0];
+
+		$this->name = ucfirst(str_replace('-',' ',$slug));
+		$this->dir =  $slug_parts[0]; // used to name the options and settings
+		$this->file = $slug_parts[1];
+		// name option to store version
+		$this->option_name = $this->dir.'-version';
+
+		$this->url = 'https://techniek-team.githost.io/'.$repo;
+		$this->package =  $this->url.'/repository/master/archive.zip';
 		$this->is_plugin = $plugin; // plugin == true && theme == false
-		$this->name = $name;
-		$this->dir = $dir;
-		$this->main_file = $file; // style.css or plugin.php
-		$this->url = $url;
-		$this->raw_file = $raw;
-		$this->package = $package;
-		$this->slug = $this->dir.'/'.$this->main_file;
-		$this->api = "https://gitlab.com/api/v4/projects/bbronswijk%2Ffresh-insights/repository/tags?private_token=uWRE_GPzYvk7wiU6qk54";
-		$slug = $this->dir; // used to name the options and settings
 
-		$this->settings_id = 'token_'.$slug;
-		$this->settings_name = $slug.'token_setting';
-		$this->option_name = 'token_'.$slug;
-		$option = get_option($this->option_name);
-		
-		$this->token = $option['token'];
+		$this->api = 'https://techniek-team.githost.io/api/v4/projects/'.str_replace('/','%2F',$repo).'/repository/tags';
+		$this->token = get_option($this->token_setting); // set in parent
 
-		// check for updates
+		if (false === empty($this->token)) {
+			$this->api .= '?private_token='.$this->token;
+		}
 		// register the token setting for the hooked theme or plugin
-		add_action( 'admin_init', array($this, 'create_token_setting'));
 		add_action( 'admin_init', array($this, 'checkUpdates'));
+		add_action( 'admin_init', array($this, 'create_token_setting'));
+
+
 	}
 
 	public function checkUpdates(){
-		add_filter ('site_transient_update_themes', array($this,'checkForThemeUpdates'));
 		add_filter ('pre_set_site_transient_update_plugins', array($this,'checkForPluginUpdates'));
+		add_filter ('pre_set_site_transient_update_themes', array($this,'checkForThemeUpdates'));
 	}
 
 	public function create_token_setting()
@@ -45,7 +48,7 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 		);
 
 		add_settings_field(
-			$this->settings_name, // setting name
+			$this->option_name, // setting name
 			$this->name, // setting title
 			array($this, 'token_option_html'), // html callback
 			$this->setting_page, // admin page
@@ -55,43 +58,40 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function token_option_html()
 	{
-
-
 		printf(
-			'<input type="text" name="%s" id="%s" value="%s" placeholder="Access Token" size="50" api="%s"/>',
-			$this->option_name, $this->settings_name, $this->token, $this->api
+			'<input name="%s" class="plugin-version" type="hidden" value="%s"/><span id="%s">v. %s</span>',
+			$this->option_name,
+			$this->api,
+			$this->option_name,
+			$this->getLastVersion()
 		);
 	}
 
 	function checkForPluginUpdates($transient)
 	{
-		if( false === $this->is_plugin ) return false;
+		if ( empty( $transient->checked ) ) {
+			return $transient;
+		}
 
+		if( false === $this->is_plugin ) return $transient;
 		$last_version = $this->getLastVersion();
-
 		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->slug);
 
-		//wp_die(version_compare ( $last_version, $plugin['Version'],'>' ));
-
 		if (version_compare ( $last_version, $plugin['Version'],'>' )) {
-
 			$obj = new stdClass();
 			$obj->slug = $this->slug;
 			$obj->new_version = $last_version;
 			$obj->plugin = $this->slug;
-
 			if ( !empty($this->token) ) {
 				$obj->url = $this->url.'?private_token=' . $this->token;
 			} else {
 				$obj->url = $this->url; // zip file??
 			}
-
 			if ( !empty($this->token) ) {
 				$obj->package = $this->package.'?private_token=' . $this->token;
 			} else {
 				$obj->package = $this->package; // zip file??
 			}
-
 			$transient->response[$this->slug] = $obj;
 		}
 		return $transient;
@@ -99,7 +99,7 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function checkForThemeUpdates($updates)
 	{
-		if ( true === $this->is_plugin ) return false;
+		if ( true === $this->is_plugin ) return $updates;
 
 		$last_version = $this->getLastVersion();
 
@@ -113,7 +113,6 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 				'package' => $this->package
 			);
 
-
 			$updates->response[$this->dir] = $update;
 		}
 
@@ -123,36 +122,12 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function getLastVersion()
 	{
-		if ( !empty($this->token) ) {
-			if (file_exists($this->raw_file.'?private_token=' . $this->token)) {
-				$handle = fopen($this->raw_file.'?private_token=' . $this->token, "r");	
-			}			
-		} else {
-			if (file_exists($this->raw_file)) {
-				$handle = fopen($this->raw_file, "r");
-			}
-		}
-
-		if ($handle) {
-			while (($line = fgets($handle)) !== false) {
-				if( stripos($line, 'version') !== FALSE ){
-					$words = $parts = explode (':', $line);
-					$version = trim($words[1]);
-					fclose($handle);
-
-					$check = preg_match("/^(?:(\d+)\.)?(?:(\d+)\.)?(\*|\d+)$/", $version);
-
-					if( $check ){
-						return $version;
-					} else{
-						return 'Error: No AccessToken provided';
-					}
-				}
-			}
-			fclose($handle);
-			return 'Error: No version provided';
-		} else {
-			return 'Error: file not found';
+		$option = get_option($this->option_name);
+		// create a new option if no token it not exits
+		if (false === is_array($option)) {
+			return null;
+		} else{
+			return $option['version'];
 		}
 	}
 

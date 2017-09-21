@@ -7,10 +7,10 @@
 		<span id="last-updated"></span>
 	</p>
 	<hr>
-	<form method="post" action="options.php">
+	<form method="post" action="">
 		<?php settings_fields($this->option_group); ?>
 		<?php do_settings_sections( $this->setting_page ); ?>
-		<?php submit_button(); ?>
+        <button id="save-tokens" class="button button-primary">Opslaan</button>
 	</form>
 </div>
 
