@@ -17,11 +17,12 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 		// name option to store version
 		$this->option_name = $this->dir.'-version';
 
-		$this->url = 'https://techniek-team.githost.io/'.$repo;
+		$this->host = get_option($this->repo_setting);
+		$this->url = $this->host . $repo;
 		$this->package =  $this->url.'/repository/master/archive.zip';
 		$this->is_plugin = $plugin; // plugin == true && theme == false
 
-		$this->api = 'https://techniek-team.githost.io/api/v4/projects/'.str_replace('/','%2F',$repo).'/repository/tags';
+		$this->api = $this->host.'api/v4/projects/'.str_replace('/','%2F',$repo).'/repository/tags';
 		$this->token = get_option($this->token_setting); // set in parent
 
 		if (false === empty($this->token)) {

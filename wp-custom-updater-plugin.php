@@ -26,7 +26,9 @@ class GithubUpdatePlugin
 	public $setting_page  = 'custom_updater_settings';
 	public $setting_section = 'update_access_token_section';
 	public $token_setting = 'custom_update_access_token';
+	public $repo_setting  = 'custom_update_repo';
 	public $option_group  = 'updater_token_group';
+	
 
 	function __construct()
 	{
@@ -134,9 +136,7 @@ class GithubUpdatePlugin
 		}
 	}
 
-	/**
-	 * Creates an admin setting page
-	 */
+	//Creates an admin setting page
 	public function create_admin_page()
 	{
 		add_submenu_page(
@@ -149,9 +149,7 @@ class GithubUpdatePlugin
 		);
 	}
 
-	/**
-	 * Renders the admin setting page
-	 */
+	// Renders the admin setting page
 	function admin_token_page()
 	{
 		// check if the users capabilities
@@ -161,6 +159,10 @@ class GithubUpdatePlugin
 
 		if($_POST[$this->token_setting]){
 			update_option($this->token_setting,$_POST[$this->token_setting]);
+		}
+
+		if($_POST[$this->repo_setting]){
+			update_option($this->repo_setting,$_POST[$this->repo_setting]);
 		}
 
 		require_once 'admin_page.php';
@@ -177,8 +179,22 @@ class GithubUpdatePlugin
 
 		// custom setting
 		register_setting(
-			$this->option_group, // setting group --> set in github-updater.php
-			$this->option_name // option_name
+			$this->option_group, // setting group 
+			'updater_repo_group' // option_name
+		);
+
+
+		register_setting(
+			$this->option_group, // setting group 
+			$this->settings_name // option_name
+		);
+
+		add_settings_field(
+			'updater_repo_group', // setting name
+			'Repo url', // setting title
+			array($this, 'repo_option_html'), // html callback
+			$this->setting_page, // admin page
+			$this->setting_section // section
 		);
 
 		add_settings_field(
@@ -187,6 +203,14 @@ class GithubUpdatePlugin
 			array($this, 'token_option_html'), // html callback
 			$this->setting_page, // admin page
 			$this->setting_section // section
+		);
+	}
+
+	function repo_option_html()
+	{
+		printf(
+			'<input type="text" name="%s" value="%s" placeholder="Access Token" size="50" />',
+			$this->repo_setting, get_option($this->repo_setting)
 		);
 	}
 
