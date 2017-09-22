@@ -3,7 +3,6 @@
 
 class WP_CustomUpdate extends GithubUpdatePlugin
 {
-	public $settings_name;
 
 	function __construct ($slug, $repo, $plugin = true )
 	{
@@ -30,8 +29,8 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 			$this->package .= '?private_token='.$this->token;
 		}
 		// register the token setting for the hooked theme or plugin
-		add_action( 'admin_init', array($this, 'checkUpdates'));
-		add_action( 'admin_init', array($this, 'create_token_setting'));
+		add_action ('admin_init', array($this, 'checkUpdates'));
+		add_action ('admin_init', array($this, 'create_token_setting'));
 	}
 
 	public function checkUpdates(){
@@ -69,11 +68,12 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 	function checkForPluginUpdates($transient)
 	{
+		if( false === $this->is_plugin ) return $transient;
+
 		if ( empty( $transient->checked ) ) {
 			return $transient;
 		}
 
-		if( false === $this->is_plugin ) return $transient;
 		$last_version = $this->getLastVersion();
 		$plugin = get_plugin_data( ABSPATH.'wp-content/plugins/'.$this->slug);
 
@@ -82,17 +82,8 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 			$obj->slug = $this->slug;
 			$obj->new_version = $last_version;
 			$obj->plugin = $this->slug;
-			if ( !empty($this->token) ) {
-				$obj->url = $this->url.'?private_token=' . $this->token;
-			} else {
-				$obj->url = $this->url; // zip file??
-			}
-			if ( !empty($this->token) ) {
-				$obj->package = $this->package.'?private_token=' . $this->token;
-			} else {
-				$obj->package = $this->package; // zip file??
-				
-			}
+			$obj->url = $this->url;
+			$obj->package = $this->package;
 
 			$transient->response[$this->slug] = $obj;
 		}
@@ -104,8 +95,11 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 
 		if ( true === $this->is_plugin ) return $updates;
 
-		$last_version = $this->getLastVersion();
+		if ( empty( $updates->checked ) ) {
+			return $updates;
+		}
 
+		$last_version = $this->getLastVersion();
 
 		$theme = wp_get_theme($this->dir, WP_CONTENT_DIR . '/themes');
 		$cur_version = $theme->get( 'Version' );
@@ -137,7 +131,6 @@ class WP_CustomUpdate extends GithubUpdatePlugin
 			return $option['version'];
 		}
 	}
-
 
 
 }

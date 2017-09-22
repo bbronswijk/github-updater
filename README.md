@@ -7,20 +7,40 @@ This plugin allows WordPress to update plugins and themes directly from gitlab o
 Install this plugin in your wordpress admin. 
 
 #### Activating custom updates in your own plugin/theme
-Copy the code below and paste it in your custom theme or plugin. 
+Copy the code below and paste it in your theme:
 ```
-function activate_custom_updates()
+function activate_custom_theme_updates()
 {
-    if( !class_exists (WP_CustomUpdate) ) return false;
+    if (!class_exists (WP_CustomUpdate)){
+        return false;
+    }
 
     $slug       = 'theme-directory/style.css';
-    $repo        = 'user/repo';
+    $repo        = 'user/theme-repo';
 
     if ($slug && $repo) {
-        new WP_CustomUpdate($slug, $repo, false );
+        new WP_CustomUpdate($slug, $repo, false);
     }
-} add_action ('init', 'activate_custom_updates');
+} add_action ('init', 'activate_custom_theme_updates');
 ```
+For plugins use the code below:
+```
+function activate_custom_plugin_updates()
+	{
+		if (!class_exists (WP_CustomUpdate)){
+			return false;
+		}
+
+		$slug       = 'plugin-directory/plugin.php';
+		$repo        = 'user/plugin-repo';
+
+		if ($slug && $repo) {
+			new WP_CustomUpdate($slug, $repo, true);
+		}
+
+	} add_action ('init', 'activate_custom_plugin_updates');
+```
+
 
 If you hosting your plugin or theme in a private repository, provide an access token in the update setting page. 
 
