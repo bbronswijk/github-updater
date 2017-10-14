@@ -11,7 +11,7 @@ Copy the code below and paste it in your theme:
 ```
 function activate_custom_theme_updates()
 {
-    if (!class_exists (WP_CustomUpdate)){
+    if (!class_exists ('WP_CustomUpdate')){
         return false;
     }
 
@@ -27,7 +27,7 @@ For plugins use the code below:
 ```
 function activate_custom_plugin_updates()
 	{
-		if (!class_exists (WP_CustomUpdate)){
+		if (!class_exists ('WP_CustomUpdate')){
 			return false;
 		}
 
