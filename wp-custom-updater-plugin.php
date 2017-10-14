@@ -45,7 +45,7 @@ class GithubUpdatePlugin
 	}
 
 	function loadScripts() {
-		wp_enqueue_script ('update-api-request', '/wp-content/plugins/wp-custom-updater/api-request.js', array('jquery'), '1.0.0', true);
+		wp_enqueue_script ('update-api-request', '/wp-content/plugins/wp-custom-update/api-request.js', array('jquery'), '1.0.0', true);
 		wp_localize_script ('update-api-request', ajax, array('url' => admin_url('admin-ajax.php')));
 	}
 
