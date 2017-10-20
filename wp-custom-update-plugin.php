@@ -204,7 +204,7 @@ class GithubUpdatePlugin
 			foreach ($updated_themes as $path) {
 
 				$path_parts      = explode('/', $path);
-				$theme_directory = $path_parts[0];
+				$theme_directory = $path_parts[0]; // prezzence
 
 				// loop through plugin directories and look for the current updated plugin folder
 				$dirs = glob(ABSPATH . 'wp-content/themes/*');
@@ -215,11 +215,20 @@ class GithubUpdatePlugin
 						//explode the directory path
 						$parts = explode( '-master', $dir );
 
-						update_option('stylesheet',$updated_themes[0] );
-						update_option('template',$updated_themes[0] );
-
 						// rename the directory and use only the part before the -master part
 						rename( $dir, $parts[0] );
+
+						$my_theme = wp_get_theme( $theme_directory );
+
+						$cur_theme = explode( 'wp-content/themes/', $dir ); // prezzence-master-sdjklgjh
+
+						// if is child theeme just update stylesheet and not template
+						if ( !empty( $my_theme->get( Template ) ) ){
+							update_option('stylesheet',$updated_themes[0] );
+						} else if( $cur_theme[1]  === get_option('stylesheet')  ){
+							update_option('template',$updated_themes[0] );
+						} 				
+						
 					}
 				}
 			}
